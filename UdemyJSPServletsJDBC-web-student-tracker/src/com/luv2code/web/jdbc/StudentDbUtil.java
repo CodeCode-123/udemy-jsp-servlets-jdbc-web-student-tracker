@@ -83,5 +83,67 @@ public class StudentDbUtil {
 		    close(myConn, myStmt, null);
 		}
 	}
+
+	public Student getStudent(String theStudentId) throws Exception {
+		Student theStudent = null;
+		Connection myConn = null;
+		PreparedStatement myStmt = null;
+		ResultSet myRs = null;
+		int studentId;
+		try {
+			// get a connection
+			myConn = dataSource.getConnection();
+			// create sql for query
+			String sql = "SELECT * FROM student WHERE id=?";
+			myStmt = myConn.prepareStatement(sql);
+			// set the param values for the student
+			studentId = Integer.parseInt(theStudentId);
+			myStmt.setInt(1, studentId);
+			// execute the sql
+			myRs = myStmt.executeQuery();
+			// return the student
+			if (myRs.next()) {
+				String firstName = myRs.getString("first_name");
+				String lastName = myRs.getString("last_name");
+				String email = myRs.getString("email");
+				// use the studentId during construction
+				theStudent = new Student(studentId, firstName, lastName, email);
+			} else {
+				throw new Exception("Could not find student id: " + studentId);
+			}
+			return theStudent;
+		}
+		finally {
+			// clean up JDBC objects
+			close(myConn, myStmt, myRs);
+		}
+	}
+
+	public void updateStudent(Student theStudent) throws Exception {
+		Connection myConn = null;
+		PreparedStatement myStmt = null;
+		int id = theStudent.getId();
+		try {
+			// get a connection
+			myConn = dataSource.getConnection();
+			// create the sql
+			String sql = "UPDATE student SET first_name=?,last_name=?,email=? WHERE id=?";
+			myStmt = myConn.prepareStatement(sql);
+			// set the params
+			String firstName = theStudent.getFirstName();
+			String lastName = theStudent.getLastName();
+			String email = theStudent.getEmail();
+			myStmt.setString(1, firstName);
+			myStmt.setString(2, lastName);
+			myStmt.setString(3, email);
+			myStmt.setInt(4, id);
+			// execute the update sql
+			myStmt.execute();
+		}
+		finally {
+			// clean up the JDBC object
+			close(myConn, myStmt, null);
+		}
+	}
 		
 }
